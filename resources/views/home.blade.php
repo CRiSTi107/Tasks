@@ -25,33 +25,37 @@
 
 @section('tasks-table')
 
-  <h3>All Tasks</h3>
   <div class="box">
-    <table class="table table-responsive">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Status</th>
-          <th>Assign</th>
-          <th>Modify</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach($tasks as $task)
+    <div class="box-header with-border">
+      <h3 class="box-title">All Tasks</h3>
+    </div>
+    <div class="box-body">
+      <table class="table table-responsive">
+        <thead>
           <tr>
-            <th>{{$task->name}}</th>
-            <th>{{$task->description}}</th>
-            <th>{{$task->status}}</th>
-            <th>{{$task->assign}}</th>
-            <th>
-              <button class="btn btn-info"   type="button" name="edit"   role="dialog" data-toggle="modal" data-target="#editTask"   data-id="{{$task->id}}" data-name="{{$task->name}}" data-description="{{$task->description}}" data-status="{{$task->status}}" data-assign="{{$task->assign}}">Edit</button>
-              <button class="btn btn-danger" type="button" name="delete" role="dialog" data-toggle="modal" data-target="#deleteTask" data-id="{{$task->id}}" data-name="{{$task->name}}">Delete</button>
-            </th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Assign</th>
+            <th>Modify</th>
           </tr>
-        @endforeach
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @foreach($tasks as $task)
+            <tr>
+              <th>{{$task->name}}</th>
+              <th>{{$task->description}}</th>
+              <th>{{$task->status}}</th>
+              <th>{{$task->assign}}</th>
+              <th>
+                <button class="btn btn-info"   type="button" name="edit"   role="dialog" data-toggle="modal" data-target="#editTask"   data-id="{{$task->id}}" data-name="{{$task->name}}" data-description="{{$task->description}}" data-status="{{$task->status}}" data-assign="{{$task->assign}}">Edit</button>
+                <button class="btn btn-danger" type="button" name="delete" role="dialog" data-toggle="modal" data-target="#deleteTask" data-id="{{$task->id}}" data-name="{{$task->name}}">Delete</button>
+              </th>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
   </div>
 
 
