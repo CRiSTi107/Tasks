@@ -20,6 +20,6 @@ Auth::routes();
 Route::get('/home', 'HomeController@index')->name('home');
 Route::post('/add-task', 'HomeController@addTask');
 //Route::put('/edit-task/{id}', 'HomeController@editTask');
-Route::post('/edit-task', 'HomeController@editTask');
+Route::patch('/edit-task', 'HomeController@editTask');
 //Route::delete('/delete-task/{id}', 'HomeController@deleteTask');
 Route::post('/delete-task', 'HomeController@deleteTask');

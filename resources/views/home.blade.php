@@ -121,7 +121,7 @@
       </div>
       <form class="" action="{{url('edit-task')}}" method="post">
         <div class="modal-body">
-          <!--{{method_field('patch')}}-->
+          <{{method_field('PATCH')}}>
           {{csrf_field()}}
           <input type="hidden" name="id" id="id" value="">
           <div class="form-group">
