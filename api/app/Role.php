@@ -3,10 +3,20 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use App\User;
 
+/**
+ * Class Role
+ *
+ * @package App
+ */
 class Role extends Model
 {
+    /** @var int */
+    const ROLE_ADMIN = 1;
+
+    /** @var int */
+    const ROLE_USER = 2;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -24,54 +34,13 @@ class Role extends Model
     protected $hidden = [
     ];
 
-
-    public const USER = 'User';
-    public const ADMIN = 'Admin';
-
     /**
-     * Gets role ID by type.
+     * Role users
      *
-     * @param $name
-     * @return ID
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public static function GetRoleIDByName($name)
+    public function users()
     {
-        $role = Role::where([
-            'name' => $name
-        ])->get()->first();
-        return $role->id;
+        return $this->hasMany('App/User');
     }
-
-    /*public static function GetRoleName($jwtToken)
-    {
-        $data = $jwtToken->payload();
-        $id = $data['id'];
-
-        $role_id = User::where([
-            'id' => $id
-        ])->get()->first()->role_id;
-
-        Role::where([
-            'id' => $role_id
-        ])->get()->first();
-    }*/
-
-    /**
-     * Checks if a User is Admin by given Token
-     * @param $jwtToken
-     * @return bool
-     */
-    public static function IsAdmin($jwtToken)
-    {
-        $data = $jwtToken->payload();
-        $id = $data['id'];
-
-        $role_id = User::where([
-            'id' => $id
-        ])->get()->first()->role_id;
-
-        return (self::GetRoleIDByName(self::ADMIN) == $role_id) ? true : false;
-    }
-
-
 }

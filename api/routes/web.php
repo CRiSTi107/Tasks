@@ -29,15 +29,23 @@ $router->options(
 $router->group(['namespace' => API_VERSION, 'prefix' => API_VERSION, 'middleware' => 'cors'], function () use ($router) {
     $router->post('/login', ['uses' => 'UserController@login']);
     $router->post('/register', ['uses' => 'UserController@register']);
+    $router->post('/forgot-password', ['uses' => 'UserController@forgotPassword']);
+    $router->post('/change-password', ['uses' => 'UserController@changePassword']);
 });
 
 /** Routes with auth */
 $router->group(['namespace' => API_VERSION, 'prefix' => API_VERSION, 'middleware' => 'cors|jwt'], function () use ($router) {
-    // token - must be provided in request
-    $router->post('/approve', ['uses' => 'UserController@approve']); // [Admin required] Route for approving users.
-    //$router->post('/reset', ['uses' => 'UserController@resetPassword']); // Method moved to changePassword under /settings route.
-    $router->post('/settings', ['uses' => 'UserController@settings']); // Route designed for editing own information.
-    $router->post('/admin', ['uses' => 'UserController@admin']); // [Admin required] Route designed to edit every user's information.
-    $router->post('/promote', ['uses' => 'UserController@promote']); // [Admin required] Promote a user to admin.
-    $router->post('/demote', ['uses' => 'UserController@demote']); // [Admin required] Demote an admin to user.
+    $router->group(['prefix' => 'user'], function () use ($router) {
+        $router->get('/', ['uses' => 'UserController@get']);
+        $router->patch('/', ['uses' => 'UserController@update']);
+    });
+
+    $router->group(['prefix' => 'admin', 'middleware' => 'admin'], function () use ($router) {
+        $router->get('/users', ['uses' => 'AdminController@getUsers']);
+        $router->group(['prefix' => 'user'], function () use ($router) {
+            $router->post('/', ['uses' => 'AdminController@createUser']);
+            $router->patch('/{id}', ['uses' => 'AdminController@updateUser']);
+            $router->delete('/{id}', ['uses' => 'AdminController@deleteUser']);
+        });
+    });
 });

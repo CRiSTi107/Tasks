@@ -5,9 +5,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 /**
- * Class CreateTasksTable
+ * Class CreateLogsTable
  */
-class CreateTasksTable extends Migration
+class CreateLogsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -16,14 +16,14 @@ class CreateTasksTable extends Migration
      */
     public function up()
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        Schema::create('logs', function (Blueprint $table) {
             $table->increments('id');
             $table->timestamps();
-            $table->string('name', 100);
-            $table->text('description');
-            $table->tinyInteger('status');
+            $table->integer('task_id');
             $table->integer('user_id');
-            $table->integer('assign');
+            $table->tinyInteger('type');
+            $table->string('old_value');
+            $table->string('new_value');
         });
     }
 
@@ -34,6 +34,6 @@ class CreateTasksTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('logs');
     }
 }

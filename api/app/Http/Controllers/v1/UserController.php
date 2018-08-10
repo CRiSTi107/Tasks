@@ -1,27 +1,22 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: iongh
- * Date: 8/1/2018
- * Time: 3:37 PM
- */
 
 namespace App\Http\Controllers\v1;
 
-
 use App\Http\Controllers\Controller;
-use App\User;
 use App\Role;
+use App\User;
 use GenTux\Jwt\JwtToken;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * Class UserController
+ *
+ * @package App\Http\Controllers\v1
+ */
 class UserController extends Controller
 {
-    //Settings options
-    public const SETTINGS_OPTIONS = [User::NAME, User::EMAIL, User::PASSWORD];
-
-
     /**
      * Login User
      *
@@ -30,354 +25,197 @@ class UserController extends Controller
      * @param JwtToken $jwtToken
      *
      * @return \Illuminate\Http\JsonResponse
-     * @throws \GenTux\Jwt\Exceptions\NoTokenException
      */
     public function login(Request $request, User $userModel, JwtToken $jwtToken)
     {
-        $rules = [
-            'email'    => 'required|email',
-            'password' => 'required'
-        ];
-
-        $messages = [
-            'email.required' => 'Email empty',
-            'email.email'    => 'Email invalid',
-            'password.required'    => 'Password empty'
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ( ! $validator->passes()) {
-            return $this->returnBadRequest($validator->errors());
-        }
-
-        $user = $userModel->login($request->email, $request->password);
-
-        if ( ! $user) {
-            return $this->returnNotFound('Username or password incorrect.');
-        }
-
-        $user = $userModel->where([
-            'email' => $request->email
-        ])->get()->first();
-
-        $userID = $user->id;
-
-        if (!$userModel->isApproved($userID)) {
-            return $this->returnNotFound('You accout has not been approved yet.');
-        }
-
-        $token = $jwtToken->createToken($user);
-
-        $data = [
-            'user' => $user,
-            'jwt'  => $token->token()
-        ];
-
-        return $this->returnSuccess($data);
-    }
-
-
-    /**
-     * Register User
-     * @param Request $request
-     * @param User $userModel
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function register(Request $request, User $userModel)
-    {
-        $rules = [
-            'name'     => 'required',
-            'email'    => 'required|email', //|unique:email
-            'password' => 'required'
-        ];
-
-        $messages = [
-            'name.required'  => 'Name empty',
-            'email.required' => 'Email empty',
-            'email.email'    => 'Email invalid',
-            //'email.unique'   => 'An user with the same email already exists.',
-            'password.required'    => 'Password empty'
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ( ! $validator->passes()) {
-            return $this->returnBadRequest($validator->errors());
-          }
-
-        $user = $userModel->register($request->name, $request->email, $request->password);
-
-        if($user instanceof User)
-        {
-            return $this->returnSuccess();
-        }
-        else // returned error from Model
-        {
-            return $this->returnNotFound($user['errorMessage']);
-        }
-    }
-
-
-    /**
-     * Approve User
-     * @param Request $request
-     * @param User $userModel
-     * @param JwtToken $jwtToken
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function approve(Request $request, User $userModel, JwtToken $jwtToken)
-    {
-        $rules = [
-            'user_id' => 'required'
-        ];
-
-        $messages = [
-            'user_id.required' => 'User ID not provided.'
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ( ! $validator->passes()) {
-            return $this->returnBadRequest($validator->errors());
-        }
-
-        $jwtToken->setToken($request->token);
-        $user = $userModel->approve($request->user_id, $jwtToken);
-
-        if($user instanceof User)
-        {
-            return $this->returnSuccess('Account has been approved.');
-        }
-        else
-        {
-            return $this->returnNotFound($user['errorMessage']);
-        }
-
-    }
-
-
-    /**
-     * Reset Password
-     * @param Request $request
-     * @param User $userModel
-     * @param JwtToken $jwtToken
-     */
-    public function resetPassword(Request $request, User $userModel, JwtToken $jwtToken)
-    {
-        $rules = [
-            //'user_id' => 'required'
-            'current_password' => 'required',
-            'new_password' => 'required'
-        ];
-
-        $messages = [
-            'current_password.required' => 'Current password not provided.',
-            'new_password.required' => 'New password not provided.'
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ( ! $validator->passes()) {
-            return $this->returnBadRequest($validator->errors());
-        }
-
-        $jwtToken->setToken($request->token);
-        $user = $userModel->resetPassword($request->current_password, $request->new_password, $jwtToken);
-
-        if($user instanceof User)
-        {
-            return $this->returnSuccess();
-        }
-        else
-        {
-            return $this->returnNotFound($user['errorMessage']);
-        }
-
-    }
-
-
-    /**
-     * Change own information
-     * @param Request $request
-     * @param User $userModel
-     * @param JwtToken $jwtToken
-     */
-    public function settings(Request $request, User $userModel, JwtToken $jwtToken)
-    {
-        $jwtToken->setToken($request->token);
-
-        $newSettings = $this->GetSettingsFromRequest($request);
         try {
-            $user = $userModel->settings($newSettings, $userModel->GetUserIDFromToken($jwtToken));
+            $rules = [
+                'email' => 'required|email',
+                'password' => 'required'
+            ];
 
-            if($user instanceof User)
-            {
-                return $this->returnSuccess('Settings has been saved.');
+            $validator = Validator::make($request->all(), $rules);
+
+            if (!$validator->passes()) {
+                return $this->returnBadRequest('Please fill all required fields');
             }
-        }
-        catch(\Exception $e) {
-            return $this->returnNotFound($e->getMessage());
-        }
 
+            $user = $userModel->login($request->email, $request->password);
+
+            if (!$user) {
+                return $this->returnNotFound('Invalid credentials');
+            }
+
+            if ($user->status === User::STATUS_INACTIVE) {
+                return $this->returnError('User is not approved by admin');
+            }
+
+            $token = $jwtToken->createToken($user);
+
+            $data = [
+                'user' => $user,
+                'jwt' => $token->token()
+            ];
+
+            return $this->returnSuccess($data);
+        } catch (\Exception $e) {
+            return $this->returnError($e->getMessage());
+        }
     }
 
-
     /**
-     * Change other user's information
+     * Register user
+     *
      * @param Request $request
-     * @param User $userModel
-     * @param JwtToken $jwtToken
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function admin(Request $request, User $userModel, JwtToken $jwtToken)
+    public function register(Request $request)
     {
-        // Check if user_id has been sent.
-        $rules = [
-            'user_id' => 'required'
-        ];
-
-        $messages = [
-            'user_id.required' => 'User ID not provided.'
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ( ! $validator->passes()) {
-            return $this->returnBadRequest($validator->errors());
-        }
-
-        // Check if owner of token is an admin.
-        $jwtToken->setToken($request->token);
-
-        if(!Role::IsAdmin($jwtToken))
-        {
-            return $this->returnBadRequest('You are not an admin.');
-        }
-
-        $newSettings = self::GetSettingsFromRequest($request);
-        $userID = $request->user_id;
         try {
-            $user = $userModel->settings($newSettings, $userID);
+            $rules = [
+                'name' => 'required',
+                'email' => 'required|email|unique:users',
+                'password' => 'required'
+            ];
 
-            if($user instanceof User)
-            {
-                return $this->returnSuccess('Settings has been saved.');
+            $validator = Validator::make($request->all(), $rules);
+
+            if (!$validator->passes()) {
+                return $this->returnBadRequest('Please fill all required fields');
             }
-        }
-        catch (\Exception $e)
-        {
-            return $this->returnNotFound($e->getMessage());
-        }
 
+            $user = new User();
+
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->password = Hash::make($request->password);
+            $user->status = User::STATUS_INACTIVE;
+            $user->role_id = Role::ROLE_USER;
+
+            $user->save();
+
+            return $this->returnSuccess();
+        } catch (\Exception $e) {
+            return $this->returnError($e->getMessage());
+        }
     }
 
     /**
-     * Get supported Settings from Request as Array
-     * @param Request $request
-     * @return array
-     */
-    private function GetSettingsFromRequest(Request $request)
-    {
-        $newSettings = array();
-
-        //If we add more features in this way it's easier
-        foreach(self::SETTINGS_OPTIONS as $setting)
-        {
-            if(isset($request->all()[$setting]))
-            {
-                $newSettings["{$setting}"] = $request->all()[$setting];
-            }
-        }
-
-        return $newSettings;
-    }
-
-
-    /**
-     * Promote a User to Admin.
+     * Forgot password
+     *
      * @param Request $request
      * @param User $userModel
-     * @param JwtToken $jwtToken
+     *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function promote(Request $request, User $userModel, JwtToken $jwtToken)
+    public function forgotPassword(Request $request, User $userModel)
     {
-        // Check if user_id has been sent.
-        $rules = [
-            'user_id' => 'required'
-        ];
+        try {
+            $rules = [
+                'email' => 'required|email|exists:users'
+            ];
 
-        $messages = [
-            'user_id.required' => 'User ID not provided.'
-        ];
+            $validator = Validator::make($request->all(), $rules);
 
-        $validator = Validator::make($request->all(), $rules, $messages);
+            if (!$validator->passes()) {
+                return $this->returnBadRequest('Please fill all required fields');
+            }
 
-        if ( ! $validator->passes()) {
-            return $this->returnBadRequest($validator->errors());
-        }
+            $user = $userModel::where('email', $request->email)->get()->first();
 
-        // Check if owner of token is an admin.
-        $jwtToken->setToken($request->token);
+            $user->forgot_code = strtoupper(str_random(6));
+            $user->save();
 
-        if(!Role::IsAdmin($jwtToken))
-        {
-            return $this->returnBadRequest('You are not an admin.');
-        }
+            //TODO should sent an email to user with code
 
-        $user = $userModel->promote($request->user_id);
-
-        if($user instanceof User)
-        {
-            return $this->returnSuccess('User has been promoted to Admin.');
-        }
-        else
-        {
-            return $this->returnNotFound();
+            return $this->returnSuccess();
+        } catch (\Exception $e) {
+            return $this->returnError($e->getMessage());
         }
     }
 
     /**
-     * Demote an Admin to User.
+     * Change user password
+     *
      * @param Request $request
      * @param User $userModel
-     * @param JwtToken $jwtToken
+     *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function demote(Request $request, User $userModel, JwtToken $jwtToken)
+    public function changePassword(Request $request, User $userModel)
     {
-        // Check if user_id has been sent.
-        $rules = [
-            'user_id' => 'required'
-        ];
+        try {
+            $rules = [
+                'email' => 'required|email|exists:users',
+                'code' => 'required',
+                'password' => 'required'
+            ];
 
-        $messages = [
-            'user_id.required' => 'User ID not provided.'
-        ];
+            $validator = Validator::make($request->all(), $rules);
 
-        $validator = Validator::make($request->all(), $rules, $messages);
+            if (!$validator->passes()) {
+                return $this->returnBadRequest('Please fill all required fields');
+            }
 
-        if ( ! $validator->passes()) {
-            return $this->returnBadRequest($validator->errors());
+            $user = $userModel::where('email', $request->email)->where('forgot_code', $request->code)->get()->first();
+
+            if (!$user) {
+                $this->returnNotFound('Code is not valid');
+            }
+
+            $user->password = Hash::make($request->password);
+            $user->forgot_code = '';
+
+            $user->save();
+
+            return $this->returnSuccess();
+        } catch (\Exception $e) {
+            return $this->returnError($e->getMessage());
         }
+    }
 
-        // Check if owner of token is an admin.
-        $jwtToken->setToken($request->token);
+    /**
+     * Get logged user
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function get()
+    {
+        try {
+            $user = $this->validateSession();
 
-        if(!Role::IsAdmin($jwtToken))
-        {
-            return $this->returnBadRequest('You are not an admin.');
+            return $this->returnSuccess($user);
+        } catch (\Exception $e) {
+            return $this->returnError($e->getMessage());
         }
+    }
 
-        $user = $userModel->demote($request->user_id);
+    /**
+     * Update logged user
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request)
+    {
+        try {
+            $user = $this->validateSession();
 
-        if($user instanceof User)
-        {
-            return $this->returnSuccess('Admin has been demoted to User.');
-        }
-        else
-        {
-            return $this->returnNotFound();
+            if ($request->has('name')) {
+                $user->name = $request->name;
+            }
+
+            if ($request->has('password')) {
+                $user->password = Hash::make($request->password);
+            }
+
+            $user->save();
+
+            return $this->returnSuccess($user);
+        } catch (\Exception $e) {
+            return $this->returnError($e->getMessage());
         }
     }
 }

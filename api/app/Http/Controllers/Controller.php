@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
+/**
+ * Class Controller
+ *
+ * @package App\Http\Controllers
+ */
 class Controller extends BaseController
 {
     use GetsJwtToken;
@@ -39,10 +44,9 @@ class Controller extends BaseController
      * Controller constructor.
      *
      * @param Request $request
-     * @param JwtToken $jwt
      * @param FirebaseDriver $jwtDriverInterface
      */
-    public function __construct(Request $request, JwtToken $jwt, FirebaseDriver $jwtDriverInterface)
+    public function __construct(Request $request, FirebaseDriver $jwtDriverInterface)
     {
         $this->jwtDriverInterface = $jwtDriverInterface;
 
@@ -151,7 +155,7 @@ class Controller extends BaseController
      *
      * @throws \GenTux\Jwt\Exceptions\NoTokenException
      */
-    protected function validateSession()
+    public function validateSession()
     {
         if (!$this->jwtToken()->validate()) {
             return false;

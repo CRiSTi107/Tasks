@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * Class CreateUsersTable
+ */
 class CreateUsersTable extends Migration
 {
     /**
@@ -21,6 +24,7 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->tinyInteger('status');
             $table->integer('role_id');
+            $table->string('forgot_code', 10);
         });
     }
 
