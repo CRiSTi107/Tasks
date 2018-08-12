@@ -4,13 +4,24 @@ import {Link, Redirect} from "react-router-dom";
 
 export default class Users extends Component {
     state = {
-        users: []
+        users: [],
+        error: ''
     };
 
     async componentDidMount() {
-        let users = await axios.get('https://jsonplaceholder.typicode.com/users');
 
-        this.setState({users: users.data});
+        let config = {
+            headers: {'Authorization': "Bearer " + sessionStorage.getItem('token')}
+        };
+
+        let users = await axios.get('http://api.task.local/v1/admin/users', config);
+
+        if(users.data.responseType === 'success') {
+            this.setState({users: users.data.data});
+        } else {
+            alert(users.data.errorMessage);
+        }
+
     }
 
     _logout = () => {

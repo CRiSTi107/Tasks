@@ -23,11 +23,11 @@ export default class Login extends Component {
         });
 
         if (response && response.data && response.data.data) {
-            sessionStorage.setItem('token', response.data.data.token);
-            console.log(response.data.data.token);
+            sessionStorage.setItem('token', response.data.data.jwt);
             this.props.history.push('/users');
         } else {
-            alert('Error');
+            alert(response.data.errorMessage);
+            this.setState({password: ''});
         }
     };
 
