@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Role;
 use App\User;
 use Closure;
-use GenTux\Jwt\Drivers\JwtDriverInterface;
 use GenTux\Jwt\GetsJwtToken;
-use GenTux\Jwt\JwtToken;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -19,6 +17,8 @@ use Illuminate\Http\Response;
  */
 class AdminMiddleware
 {
+    use GetsJwtToken;
+
     /**
      * Format error message
      *
@@ -50,15 +50,14 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next)
     {
         try {
-            $jwtToken = new JwtToken(app(JwtDriverInterface::class));
-            $jwtToken->setToken($request->bearerToken());
-
-            if (!$jwtToken->validate()) {
+            if (!$this->jwtToken()->validate()) {
                 return $this->formatErrorMessage('Not authenticated!');
             }
 
+            $token = $this->jwtToken();
+
             /** @var User $user */
-            $user = User::where('id', $jwtToken->payload('id'))->where('email', $jwtToken->payload('context.email'))->first();
+            $user = User::where('id', $token->payload('id'))->where('email', $token->payload('context.email'))->first();
 
             if (!$user || $user->role_id !== Role::ROLE_ADMIN) {
                 return $this->formatErrorMessage('You need to be admin to call this route!');

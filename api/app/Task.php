@@ -11,6 +11,18 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Task extends Model
 {
+    /** @var int */
+    const STATUS_ASSIGNED = 0;
+
+    /** @var int */
+    const STATUS_IN_PROGRESS = 1;
+
+    /** @var int */
+    const STATUS_NOT_DONE = 2;
+
+    /** @var int */
+    const STATUS_DONE = 3;
+
     /**
      * The attributes that are mass assignable.
      *

@@ -40,12 +40,6 @@ $router->group(['namespace' => API_VERSION, 'prefix' => API_VERSION, 'middleware
         $router->patch('/', ['uses' => 'UserController@update']);
     });
 
-    $router->group(['prefix' => 'task'], function () use ($router) {
-        $router->post('/', ['uses' => 'TaskController@add']);
-        $router->get('/', ['uses' => 'TaskController@get']);
-        $router->patch('/{id}', ['uses' => 'TaskController@update']);
-    });
-
     $router->group(['prefix' => 'admin', 'middleware' => 'admin'], function () use ($router) {
         $router->get('/users', ['uses' => 'AdminController@getUsers']);
         $router->group(['prefix' => 'user'], function () use ($router) {
@@ -53,12 +47,12 @@ $router->group(['namespace' => API_VERSION, 'prefix' => API_VERSION, 'middleware
             $router->patch('/{id}', ['uses' => 'AdminController@updateUser']);
             $router->delete('/{id}', ['uses' => 'AdminController@deleteUser']);
         });
-        $router->get('/tasks', ['uses' => 'AdminController@getTasks']);
-        $router->group(['prefix' => 'task'], function () use ($router) {
-            $router->post('/', ['uses' => 'AdminController@createTask']);
-            $router->patch('/{id}', ['uses' => 'AdminController@updateTask']);
-            $router->delete('/{id}', ['uses' => 'AdminController@deleteTask']);
-        });
+    });
 
+    $router->get('/tasks', ['uses' => 'TaskController@getAll']);
+    $router->group(['prefix' => 'user'], function () use ($router) {
+        $router->post('/', ['uses' => 'TaskController@create']);
+        $router->patch('/{id}', ['uses' => 'TaskController@update']);
+        $router->delete('/{id}', ['uses' => 'TaskController@delete']);
     });
 });
